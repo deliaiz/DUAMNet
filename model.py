@@ -6,7 +6,7 @@ class DUAMNet(nn.Module):
         self.T2 = DUAM_BU(args)
         self.T3 = DUAM_BU(args)
         self.T4 = DUAM_BU(args)
-        self.cbam = CBAM(96, 16)
+        self.cbam = CBAM(16, 16)
 
     def forward(self, x_input):
         x1 = x_input  
@@ -115,13 +115,13 @@ class DUAM_BU(nn.Module):
             f_s2 = f_s2 + self.DUAMS[4](self.Up2(f_s4))
             f_s1 = f_s1 + self.DUAMS[5](self.Up1(f_s2))
 
-        res4 = self.UPNet4(f_s4)
-        res2 = self.UPNet2(f_s2) + self.Img_up(res4)
-        res1 = self.UPNet(f_s1) + self.Img_up(res2)
-        res1 = res1 + outputs[0]
-        return res1, res2, res4
+        rst4 = self.UPNet4(f_s4)
+        rst2 = self.UPNet2(f_s2) + self.Img_up(rst4)
+        rst1 = self.UPNet(f_s1) + self.Img_up(rst2)
+        rst1 = rst1 + outputs[0]
+        return rst1, rst2, rst4
 
     def forward(self, x_input):
         x = x_input
-        res1, res2, res4= self.part_forward(x)
-        return res1, res2, res4
+        rst1, rst2, rst4= self.part_forward(x)
+        return rst1, rst2, rst4
