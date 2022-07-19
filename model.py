@@ -12,23 +12,30 @@ class DUAMNet(nn.Module):
         x1 = x_input  
         lbp1 = get_LBP(x1)
         x1 = torch.cat((x1, lbp1), 1)  
-        res_g1_s1 = self.T1(x1)
+        res1 = self.T1(x1)
 
-        x2 = res_g1_s1
+        x2 = res1
         lbp2 = get_LBP(x2)
         x2 = torch.cat((x2, lbp2), 1)
-        res_g2_s1= self.T2(x2)
+        x2 = torch.cat((x2, x1), 1) 
+        res2= self.T2(x2)
 
-        x3 = res_g2_s1
+        x3 = res2
         lbp3 = get_LBP(x3)
         x3 = torch.cat((x3, lbp3), 1) 
-        res_g3_s1 = self.T3(x3)
+        x3 = torch.cat((x3, x1), 1) 
+        res3 = self.T3(x3)
 
-        x4 = res_g3_s1
+        x4 = res3
         lbp4 = get_LBP(x4)
-        x4= torch.cat((x4, lbp4), 1)  # 96
-        res_g4_s1 = self.T4(x4)
-        return res_g4_s1, res_g4_s2, res_g4_s4
+        x4= torch.cat((x4, lbp4), 1)  
+        x4 = torch.cat((x4, x1), 1) 
+        res4 = self.T4(x4)
+        ped4 = res4[:, :, 0::4, 0::4]
+        pred2 = res4[:, :, 0::2, 0::2]
+        pred1 = res4
+        
+        return pred1,pred2,pred4
 
 class DUAM_BU(nn.Module):
     def __init__(self, args):
@@ -101,23 +108,23 @@ class DUAM_BU(nn.Module):
 
        # U-Net:outer-encoder
         first = self.Relu(self.SFENet1(input_x))  
-        f_s1 = self.Relu(self.SFENet2(f_first)) 
-        f_s2 = self.Down1(self.DUAMS[0](s1)) 
-        f_s4 = self.Down2(self.DUAMS[1](s2))  
+        s1 = self.Relu(self.SFENet2(first)) 
+        s2 = self.Down1(self.DUAMS[0](s1)) 
+        s4 = self.Down2(self.DUAMS[1](s2))  
 
         # U-Net: outer-decoder
         if flag == 0:
-            f_s4 = f_s4 + self.DUAMS[3](self.RDBs[2](f_s4))  
-            f_s2 = f_s2 + self.DUAMS[4](self.Up2(f_s4))
-            f_s1 = f_s1 + self.DUAMS[5](self.Up1(f_s2)) 
+            s4 = s4 + self.DUAMS[3](self.RDBs[2](s4))  
+            s2 = s2 + self.DUAMS[4](self.Up2(s4))
+            s1 = s1 + self.DUAMS[5](self.Up1(s2)) 
         else:
-            f_s4 = f_s4 + self.DUAMS[3](self.RDBs[2](f_s4))
-            f_s2 = f_s2 + self.DUAMS[4](self.Up2(f_s4))
-            f_s1 = f_s1 + self.DUAMS[5](self.Up1(f_s2))
+            s4 = s4 + self.DUAMS[3](self.RDBs[2](s4))
+            s2 = s2 + self.DUAMS[4](self.Up2(s4))
+            s1 = s1 + self.DUAMS[5](self.Up1(s2))
 
-        rst4 = self.UPNet4(f_s4)
-        rst2 = self.UPNet2(f_s2) + self.Img_up(rst4)
-        rst1 = self.UPNet(f_s1) + self.Img_up(rst2)
+        rst4 = self.UPNet4(s4)
+        rst2 = self.UPNet2(s2) + self.Img_up(rst4)
+        rst1 = self.UPNet(s1) + self.Img_up(rst2)
         rst1 = rst1 + outputs[0]
         return rst1, rst2, rst4
 
