@@ -73,5 +73,6 @@ class NestFuse(nn.Module):
         else:
             output = self.conv_out(x1_3)
             return [output]
+        
 
   
