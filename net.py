@@ -1,5 +1,4 @@
 # NestFuse network 
-
 class NestFuse(nn.Module):
     def __init__(self, nb_filter, input_nc=1, output_nc=1, deepsupervision=True):
         super(NestFuse, self).__init__()
@@ -49,16 +48,6 @@ class NestFuse(nn.Module):
         x4_0 = self.DB4_0(self.pool(x3_0))
         # x5_0 = self.DB5_0(self.pool(x4_0))
         return [x1_0, x2_0, x3_0, x4_0]
-
-    def fusion(self, en1, en2, p_type):
-        # attention weight
-        fusion_function = fusion_strategy.attention_fusion_weight
-        f1_0 = fusion_function(en1[0], en2[0], p_type)
-        f2_0 = fusion_function(en1[1], en2[1], p_type)
-        f3_0 = fusion_function(en1[2], en2[2], p_type)
-        f4_0 = fusion_function(en1[3], en2[3], p_type)
-        return [f1_0, f2_0, f3_0, f4_0]
-
     def decoder_train(self, f_en):
         x1_1 = self.DB1_1(torch.cat([f_en[0], self.up(f_en[1])], 1))
         x2_1 = self.DB2_1(torch.cat([f_en[1], self.up(f_en[2])], 1))
